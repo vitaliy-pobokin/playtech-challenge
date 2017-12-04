@@ -12,18 +12,27 @@ import java.util.Map;
 
 // TODO: possible null value in parameter field???
 // TODO: Converter method name
-// TODO: Command annotation
+// TODO: ParserCommand annotation
 // TODO: print usage from annotations
+// TODO: builder for parser or Parser constructor commands min quantity handling with checking invariant
 public class Parser {
     private Map<String, Command> possibleCommands;
     private List<Command> parsedCommands;
 
     public Parser(Command... commands) {
+        initPossibleCommands(commands);
+        this.parsedCommands = new ArrayList<>();
+    }
+
+    private void initPossibleCommands(Command[] commands) throws IllegalArgumentException {
         this.possibleCommands = new HashMap<>();
         for (Command command : commands) {
-            possibleCommands.put(command.getKeyword(), command);
+            ParserCommand commandAnnotation = command.getClass().getAnnotation(ParserCommand.class);
+            if (commandAnnotation == null) {
+                throw new IllegalArgumentException("@ParserCommand annotation should be used on command object.");
+            }
+            possibleCommands.put(commandAnnotation.keyword(), command);
         }
-        this.parsedCommands = new ArrayList<>();
     }
 
     public void parse(String[] args) throws ParserException {

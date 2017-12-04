@@ -3,11 +3,12 @@ package org.examples.pbk.playtech.commands;
 import org.examples.pbk.playtech.PasswordFile;
 import org.examples.pbk.playtech.UserEntry;
 import org.examples.pbk.playtech.parser.Parameter;
+import org.examples.pbk.playtech.parser.ParserCommand;
 import org.mindrot.jbcrypt.BCrypt;
 
+@ParserCommand(keyword = "auth", description = "Authenticate with username:password entry stored in the .password file")
 public class CommandAuth implements Command {
     private PasswordFile passwordFile;
-    private static final String KEYWORD = "auth";
 
     @Parameter(name = "username:password", converterClass = UserEntry.class)
     private UserEntry userEntry;
@@ -25,11 +26,6 @@ public class CommandAuth implements Command {
             }
         }
         throw new CommandException("Authentication exception");
-    }
-
-    @Override
-    public String getKeyword() {
-        return KEYWORD;
     }
 
     private boolean checkPassword(String password, String hashedPassword) {
