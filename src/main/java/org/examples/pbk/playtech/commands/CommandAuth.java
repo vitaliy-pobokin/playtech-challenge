@@ -19,7 +19,6 @@ public class CommandAuth implements Command {
         UserEntry userEntry = passwordFile.findUserEntry(args.getUserEntry().getUsername());
         if (userEntry != null) {
             if (checkPassword(args.getUserEntry().getPassword(), userEntry.getPassword())) {
-                System.out.println("athenticated");
                 return;
             }
         }
