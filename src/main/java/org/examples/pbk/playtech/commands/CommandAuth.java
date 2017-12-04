@@ -2,24 +2,25 @@ package org.examples.pbk.playtech.commands;
 
 import org.examples.pbk.playtech.PasswordFile;
 import org.examples.pbk.playtech.UserEntry;
-import org.examples.pbk.playtech.parser.Args;
+import org.examples.pbk.playtech.parser.Parameter;
 import org.mindrot.jbcrypt.BCrypt;
 
 public class CommandAuth implements Command {
-    private Args args;
     private PasswordFile passwordFile;
     private static final String KEYWORD = "auth";
 
-    public CommandAuth(PasswordFile passwordFile, Args args) {
+    @Parameter(name = "username:password", converterClass = UserEntry.class)
+    private UserEntry userEntry;
+
+    public CommandAuth(PasswordFile passwordFile) {
         this.passwordFile = passwordFile;
-        this.args = args;
     }
 
     @Override
     public void execute() throws CommandException {
-        UserEntry userEntry = passwordFile.findUserEntry(args.getUserEntry().getUsername());
-        if (userEntry != null) {
-            if (checkPassword(args.getUserEntry().getPassword(), userEntry.getPassword())) {
+        UserEntry fileUserEntry = passwordFile.findUserEntry(userEntry.getUsername());
+        if (fileUserEntry != null) {
+            if (checkPassword(userEntry.getPassword(), fileUserEntry.getPassword())) {
                 return;
             }
         }
