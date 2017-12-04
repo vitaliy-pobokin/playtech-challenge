@@ -8,6 +8,7 @@ import org.mindrot.jbcrypt.BCrypt;
 public class CommandAuth implements Command {
     private Args args;
     private PasswordFile passwordFile;
+    private static final String KEYWORD = "auth";
 
     public CommandAuth(PasswordFile passwordFile, Args args) {
         this.passwordFile = passwordFile;
@@ -23,6 +24,11 @@ public class CommandAuth implements Command {
             }
         }
         throw new CommandException("Authentication exception");
+    }
+
+    @Override
+    public String getKeyword() {
+        return KEYWORD;
     }
 
     private boolean checkPassword(String password, String hashedPassword) {

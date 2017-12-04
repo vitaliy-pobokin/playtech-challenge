@@ -14,9 +14,9 @@ public class CommandLineUtil {
         PasswordFile file = new PasswordFile(homeDirectory);
 
         Args arguments = new Args();
-        Parser parser = new Parser(arguments);
         CommandAdd add = new CommandAdd(file, arguments);
         CommandAuth auth = new CommandAuth(file, arguments);
+        Parser parser = new Parser(arguments, add, auth);
         CommandExecutor executor = CommandExecutor.newInstance();
         executor.addCommand("add", add);
         executor.addCommand("auth", auth);

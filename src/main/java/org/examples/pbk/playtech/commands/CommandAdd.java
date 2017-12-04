@@ -8,6 +8,7 @@ import org.mindrot.jbcrypt.BCrypt;
 public class CommandAdd implements Command {
     private Args args;
     private PasswordFile passwordFile;
+    private static final String KEYWORD = "add";
 
     public CommandAdd(PasswordFile passwordFile, Args args) {
         this.passwordFile = passwordFile;
@@ -24,5 +25,10 @@ public class CommandAdd implements Command {
         } else {
             throw new CommandException("User already exists.");
         }
+    }
+
+    @Override
+    public String getKeyword() {
+        return KEYWORD;
     }
 }
