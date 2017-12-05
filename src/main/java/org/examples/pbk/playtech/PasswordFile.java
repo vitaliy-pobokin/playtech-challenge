@@ -42,12 +42,11 @@ public class PasswordFile {
         try (BufferedReader reader = Files.newBufferedReader(file, charset)) {
             String line = null;
             while ((line = reader.readLine()) != null) {
-                if (line.startsWith(username + USERNAME_PASSWORD_DELIMITER)) {
+                if (line.startsWith(username + USERNAME_PASSWORD_DELIMITER))
                     return UserEntry.valueOf(line);
-                }
             }
-        } catch (IOException x) {
-            System.err.format("IOException: %s%n", x);
+        } catch (IOException e) {
+            System.err.format("IOException: %s%n", e);
         }
         return null;
     }

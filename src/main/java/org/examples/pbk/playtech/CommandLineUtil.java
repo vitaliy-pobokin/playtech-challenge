@@ -1,5 +1,6 @@
 package org.examples.pbk.playtech;
 
+import org.examples.pbk.playtech.commands.Command;
 import org.examples.pbk.playtech.commands.CommandAdd;
 import org.examples.pbk.playtech.commands.CommandAuth;
 import org.examples.pbk.playtech.commands.CommandException;
@@ -21,12 +22,13 @@ public class CommandLineUtil {
         try {
             parser.parse(args);
         } catch (ParserException e) {
-            e.printStackTrace();
-            parser.printUsage();
+            System.err.println(e.getMessage());
+            System.err.print(parser.getUsageInfo());
             System.exit(-1);
         }
         try {
-            parser.getParsedCommands().get(0).execute();
+            Command command = (Command) parser.getParsedCommand();
+            command.execute();
         } catch (CommandException e) {
             System.err.println(e.getMessage());
             System.exit(-1);
