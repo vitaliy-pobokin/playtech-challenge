@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-// TODO: Converter method name
 // TODO: add app_name support for print usage
 // TODO: builder for parser or Parser constructor commands min quantity handling with checking invariant
 public class Parser {
@@ -31,7 +30,6 @@ public class Parser {
     }
 
     public void parse(String[] args) throws ParserException {
-        if (args.length != 2) throw new ParserException();
         ParserCommandData parsedCommandData = possibleCommands.get(args[0]);
         if (parsedCommandData == null) throw new ParserException();
         parseParameters(parsedCommandData, args);
@@ -62,15 +60,16 @@ public class Parser {
             Field field = entry.getValue();
             boolean isAccessible = field.isAccessible();
             try {
-                Method valueOf = parameter.converterClass().getMethod("valueOf", String.class);
+                Method converterMethod = parameter.converterClass().getMethod(parameter.converterMethodName(), String.class);
                 field.setAccessible(true);
-                Object fieldValue = valueOf.invoke(data.command, args[argPointer]);
+                Object fieldValue = converterMethod.invoke(data.command, args[argPointer]);
                 if (fieldValue == null)
                     throw new ParserException("Argument cannot be parsed with converter method in parameter class.");
                 field.set(data.command, fieldValue);
                 argPointer++;
             } catch (NoSuchMethodException e) {
-                throw new ParserException("No valueOf converter method in parameter class.");
+                String message = String.format("Converter method %s(String s) in converter class not found.", parameter.converterMethodName());
+                throw new ParserException(message);
             } catch (IllegalAccessException | InvocationTargetException | IllegalArgumentException e) {
                 throw new ParserException(e);
             } finally {

@@ -10,7 +10,7 @@ import org.mindrot.jbcrypt.BCrypt;
 public class CommandAuth implements Command {
     private PasswordFile passwordFile;
 
-    @Parameter(name = "username:password", converterClass = UserEntry.class)
+    @Parameter(name = "username:password", converterClass = UserEntry.class, converterMethodName = "valueOf")
     private UserEntry userEntry;
 
     public CommandAuth(PasswordFile passwordFile) {

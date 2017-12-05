@@ -8,4 +8,5 @@ import java.lang.annotation.RetentionPolicy;
 public @interface Parameter {
     String name();
     Class converterClass();
+    String converterMethodName();
 }
