@@ -10,13 +10,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-// TODO: possible null value in parameter field???
 // TODO: Converter method name
-// TODO: ParserCommand annotation
-// TODO: print usage from annotations
+// TODO: add app_name support for print usage
 // TODO: builder for parser or Parser constructor commands min quantity handling with checking invariant
 public class Parser {
-    private Map<String, Command> possibleCommands;
+    private Map<String, ParserCommandData> possibleCommands;
     private List<Command> parsedCommands;
 
     public Parser(Command... commands) {
@@ -27,23 +25,17 @@ public class Parser {
     private void initPossibleCommands(Command[] commands) throws IllegalArgumentException {
         this.possibleCommands = new HashMap<>();
         for (Command command : commands) {
-            ParserCommand commandAnnotation = command.getClass().getAnnotation(ParserCommand.class);
-            if (commandAnnotation == null) {
-                throw new IllegalArgumentException("@ParserCommand annotation should be used on command object.");
-            }
-            possibleCommands.put(commandAnnotation.keyword(), command);
+            ParserCommandData data = getParserCommandData(command);
+            possibleCommands.put(data.commandAnnotation.keyword(), data);
         }
     }
 
     public void parse(String[] args) throws ParserException {
         if (args.length != 2) throw new ParserException();
-        Command parsedCommand = possibleCommands.get(args[0]);
-        if (parsedCommand != null) {
-            parseParameters(parsedCommand, args[1]);
-            parsedCommands.add(parsedCommand);
-            return;
-        }
-        throw new ParserException();
+        ParserCommandData parsedCommandData = possibleCommands.get(args[0]);
+        if (parsedCommandData == null) throw new ParserException();
+        parseParameters(parsedCommandData, args);
+        parsedCommands.add((Command) parsedCommandData.command);
     }
 
     public List<Command> getParsedCommands() {
@@ -51,32 +43,64 @@ public class Parser {
     }
 
     public void printUsage() {
-        System.out.println("Usage printed");
+        System.err.print("usage: <CommandLineUtil> [command] [parameters]\n" +
+                "\t commands:\n");
+        possibleCommands.forEach((String keyword, ParserCommandData data) -> {
+            System.err.printf("\t\t%s", data.commandAnnotation.keyword());
+            for (Parameter parameter : data.parameters.keySet()) {
+                System.err.printf(" [%s]", parameter.name());
+            }
+            System.err.printf("\t\t%s\n", data.commandAnnotation.description());
+        });
     }
 
-    private void parseParameters(Command command, String arg) throws ParserException {
-        Class clazz = command.getClass();
-        Field[] fields = clazz.getDeclaredFields();
-        for (Field field : fields) {
-            if (field.isAnnotationPresent(Parameter.class)) {
-                Parameter parameter = field.getAnnotation(Parameter.class);
-                boolean isAccessible = field.isAccessible();
-                try {
-                    Method valueOf = parameter.converterClass().getMethod("valueOf", String.class);
-                    field.setAccessible(true);
-                    Object fieldValue = valueOf.invoke(command, arg);
-                    field.set(command, valueOf.invoke(command, arg));
-                } catch (NoSuchMethodException e) {
-                    throw new ParserException("No valueOf converter method in parameter class.");
-                } catch (IllegalAccessException | InvocationTargetException | IllegalArgumentException e) {
-                    throw new ParserException(e);
-                } finally {
-                    field.setAccessible(isAccessible);
-                }
-                return;
+    private void parseParameters(ParserCommandData data, String[] args) throws ParserException {
+        if (data.parameters.size() != args.length - 1) throw new ParserException("Parameters quantity mismatch");
+        int argPointer = 1;
+        for (Map.Entry<Parameter, Field> entry : data.parameters.entrySet()) {
+            Parameter parameter = entry.getKey();
+            Field field = entry.getValue();
+            boolean isAccessible = field.isAccessible();
+            try {
+                Method valueOf = parameter.converterClass().getMethod("valueOf", String.class);
+                field.setAccessible(true);
+                Object fieldValue = valueOf.invoke(data.command, args[argPointer]);
+                if (fieldValue == null)
+                    throw new ParserException("Argument cannot be parsed with converter method in parameter class.");
+                field.set(data.command, fieldValue);
+                argPointer++;
+            } catch (NoSuchMethodException e) {
+                throw new ParserException("No valueOf converter method in parameter class.");
+            } catch (IllegalAccessException | InvocationTargetException | IllegalArgumentException e) {
+                throw new ParserException(e);
+            } finally {
+                field.setAccessible(isAccessible);
             }
         }
+    }
 
-        throw new ParserException("Parameters parsing exception");
+    private ParserCommandData getParserCommandData(Object command) {
+        ParserCommand commandAnnotation = command.getClass().getAnnotation(ParserCommand.class);
+        if (commandAnnotation == null) {
+            throw new IllegalArgumentException("@ParserCommand annotation should be used on command object.");
+        }
+        Map<Parameter, Field> parameters = new HashMap<>();
+        Field[] fields = command.getClass().getDeclaredFields();
+        for (Field field : fields) {
+            if (field.isAnnotationPresent(Parameter.class)) {
+                parameters.put(field.getAnnotation(Parameter.class), field);
+            }
+        }
+        ParserCommandData data = new ParserCommandData();
+        data.command = command;
+        data.commandAnnotation = commandAnnotation;
+        data.parameters = parameters;
+        return data;
+    }
+
+    private class ParserCommandData {
+        Object command;
+        ParserCommand commandAnnotation;
+        Map<Parameter, Field> parameters;
     }
 }
