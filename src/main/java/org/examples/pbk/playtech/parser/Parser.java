@@ -16,9 +16,11 @@ public class Parser {
 
     public void parse(String[] args) throws ParserException {
         ParserCommandInfo parsedCommandData = possibleCommands.get(args[0]);
-        if (parsedCommandData == null) throw new ParserException("Command not found");
+        if (parsedCommandData == null) {
+            throw new ParserException("Command not found");
+        }
         parseParameters(parsedCommandData, args);
-        parsedCommand = parsedCommandData.command;
+        parsedCommand = parsedCommandData.commandObj;
     }
 
     public Object getParsedCommand() {
@@ -47,7 +49,9 @@ public class Parser {
     }
 
     private void parseParameters(ParserCommandInfo commandInfo, String[] args) throws ParserException {
-        if (commandInfo.parameters.size() != args.length - 1) throw new ParserException("Parameters quantity mismatch");
+        if (commandInfo.parameters.size() != args.length - 1) {
+            throw new ParserException("Parameters quantity mismatch");
+        }
         int argPointer = 1;
         for (Map.Entry<Parameter, Field> entry : commandInfo.parameters.entrySet()) {
             Parameter parameter = entry.getKey();
@@ -56,10 +60,11 @@ public class Parser {
             try {
                 Method converterMethod = parameter.converterClass().getMethod(parameter.converterMethodName(), String.class);
                 field.setAccessible(true);
-                Object fieldValue = converterMethod.invoke(commandInfo.command, args[argPointer]);
-                if (fieldValue == null)
+                Object fieldValue = converterMethod.invoke(commandInfo.commandObj, args[argPointer]);
+                if (fieldValue == null) {
                     throw new ParserException("Argument cannot be parsed with converter method in parameter class.");
-                field.set(commandInfo.command, fieldValue);
+                }
+                field.set(commandInfo.commandObj, fieldValue);
                 argPointer++;
             } catch (NoSuchMethodException e) {
                 String message = String.format("Converter method %s(String s) in converter class not found.", parameter.converterMethodName());
@@ -74,11 +79,12 @@ public class Parser {
 
     private ParserCommandInfo getParserCommandInfo(Object command) {
         ParserCommand commandAnnotation = command.getClass().getAnnotation(ParserCommand.class);
-        if (commandAnnotation == null)
+        if (commandAnnotation == null) {
             throw new IllegalArgumentException("@ParserCommand annotation should be used on command object.");
+        }
         Map<Parameter, Field> parameters = getFieldsWithParameterAnnotation(command);
         ParserCommandInfo commandInfo = new ParserCommandInfo();
-        commandInfo.command = command;
+        commandInfo.commandObj = command;
         commandInfo.commandAnnotation = commandAnnotation;
         commandInfo.parameters = parameters;
         return commandInfo;
@@ -88,14 +94,15 @@ public class Parser {
         Map<Parameter, Field> parameters = new HashMap<>();
         Field[] fields = command.getClass().getDeclaredFields();
         for (Field field : fields) {
-            if (field.isAnnotationPresent(Parameter.class))
+            if (field.isAnnotationPresent(Parameter.class)) {
                 parameters.put(field.getAnnotation(Parameter.class), field);
+            }
         }
         return parameters;
     }
 
     private class ParserCommandInfo {
-        Object command;
+        Object commandObj;
         ParserCommand commandAnnotation;
         Map<Parameter, Field> parameters;
     }

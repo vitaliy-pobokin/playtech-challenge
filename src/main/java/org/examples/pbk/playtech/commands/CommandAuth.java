@@ -22,10 +22,8 @@ public class CommandAuth implements Command {
     @Override
     public void execute() throws CommandException {
         UserEntry fileUserEntry = passwordFile.findUserEntry(userEntry.getUsername());
-        if (fileUserEntry != null) {
-            if (passwordHasher.checkPassword(userEntry.getPassword(), fileUserEntry.getPassword())) {
-                return;
-            }
+        if (fileUserEntry != null && passwordHasher.checkPassword(userEntry.getPassword(), fileUserEntry.getPassword())) {
+            return;
         }
         throw new CommandException("Authentication exception");
     }

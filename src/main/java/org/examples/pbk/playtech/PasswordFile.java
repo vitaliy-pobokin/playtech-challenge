@@ -12,7 +12,7 @@ import static java.nio.file.StandardOpenOption.*;
 import static org.examples.pbk.playtech.UserEntry.USERNAME_PASSWORD_DELIMITER;
 
 public class PasswordFile {
-    private Path file;
+    private final Path file;
     private final Charset charset = Charset.forName("US-ASCII");
     private static final String FILENAME = ".passwords";
 
@@ -42,8 +42,9 @@ public class PasswordFile {
         try (BufferedReader reader = Files.newBufferedReader(file, charset)) {
             String line = null;
             while ((line = reader.readLine()) != null) {
-                if (line.startsWith(username + USERNAME_PASSWORD_DELIMITER))
+                if (line.startsWith(username + USERNAME_PASSWORD_DELIMITER)) {
                     return UserEntry.valueOf(line);
+                }
             }
         } catch (IOException e) {
             System.err.format("IOException: %s%n", e);

@@ -15,9 +15,8 @@ public class UserEntry {
     @CheckForNull
     public static UserEntry valueOf(String usernamePwdPair) {
         String[] values = usernamePwdPair.split(USERNAME_PASSWORD_DELIMITER);
-        if (values.length == 2) {
-            if (values[0].length() > 0 && values[1].length() > 0)
-                return new UserEntry(values[0].trim(), values[1].trim());
+        if (values.length == 2 && values[0].length() > 0 && values[1].length() > 0) {
+            return new UserEntry(values[0].trim(), values[1].trim());
         }
         return null;
     }
@@ -32,9 +31,5 @@ public class UserEntry {
 
     public String getPassword() {
         return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 }
